@@ -3,7 +3,7 @@ import httpStatus from 'http-status';
 import { AuthenticatedRequest } from '@/middlewares';
 import paymentsService from '@/services/payments-service';
 
-export async function getPaymentByTicketId(req: AuthenticatedRequest, res: Response) {
+async function getPaymentByTicketId(req: AuthenticatedRequest, res: Response) {
   try {
     const { ticketId } = req.query
     const { userId } = req;
@@ -23,7 +23,7 @@ export async function getPaymentByTicketId(req: AuthenticatedRequest, res: Respo
   }
 }
 
-export async function paymentProcess(req: AuthenticatedRequest, res: Response) {
+async function paymentProcess(req: AuthenticatedRequest, res: Response) {
   const { userId } = req;
   const { ticketId, cardData } = req.body;
 
@@ -41,3 +41,5 @@ export async function paymentProcess(req: AuthenticatedRequest, res: Response) {
     return res.sendStatus(httpStatus.NOT_FOUND);
   }
 }
+
+export const paymentController = { getPaymentByTicketId, paymentProcess }

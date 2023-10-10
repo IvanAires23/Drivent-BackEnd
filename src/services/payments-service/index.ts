@@ -1,9 +1,10 @@
-import { invalidDataError, notFoundError, unauthorizedError } from '@/errors';
+import { notFoundError, unauthorizedError } from '@/errors';
 import { CardPaymentParams, PaymentParams } from '@/protocols';
 import enrollmentRepository from '@/repositories/enrollment-repository';
 import paymentsRepository from '@/repositories/payments-repository';
 import ticketsRepository from '@/repositories/tickets-repository';
 import { badRequest } from '../../errors/bad-resquest-error';
+
 
 async function verifyTicketAndEnrollment(ticketId: number, userId: number) {
   const ticket = await ticketsRepository.findTickeyById(ticketId);

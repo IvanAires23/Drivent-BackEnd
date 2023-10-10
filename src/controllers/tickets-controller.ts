@@ -4,7 +4,7 @@ import { AuthenticatedRequest } from '@/middlewares';
 import ticketService from '@/services/tickets-service';
 import { InputTicketBody } from '@/protocols';
 
-export async function getTicketTypes(req: AuthenticatedRequest, res: Response) {
+async function getTicketTypes(req: AuthenticatedRequest, res: Response) {
   try {
     const ticketTypes = await ticketService.getTicketType();
     return res.status(httpStatus.OK).send(ticketTypes);
@@ -13,7 +13,7 @@ export async function getTicketTypes(req: AuthenticatedRequest, res: Response) {
   }
 }
 
-export async function getTickets(req: AuthenticatedRequest, res: Response) {
+async function getTickets(req: AuthenticatedRequest, res: Response) {
   const { userId } = req;
 
   try {
@@ -24,7 +24,7 @@ export async function getTickets(req: AuthenticatedRequest, res: Response) {
   }
 }
 
-export async function createTicket(req: AuthenticatedRequest, res: Response) {
+async function createTicket(req: AuthenticatedRequest, res: Response) {
   const { userId } = req;
   const { ticketTypeId } = req.body as InputTicketBody;
 
@@ -38,4 +38,10 @@ export async function createTicket(req: AuthenticatedRequest, res: Response) {
   } catch (e) {
     return res.sendStatus(httpStatus.NOT_FOUND);
   }
+}
+
+export const ticketsController = {
+  createTicket,
+  getTickets,
+  getTicketTypes
 }
