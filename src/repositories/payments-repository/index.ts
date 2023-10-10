@@ -1,78 +1,64 @@
 import { connectDb } from "../../config"
-import { DataCard } from "../../protocols"
 
 async function getPayments(ticketId: number, userId: number) {
-    const ticket = await connectDb().ticket.findFirst({
-        where: {
-            id: ticketId
-        }
-    })
-    if (!ticket) return "NotTicket"
-
     const dataPayment = await connectDb().payment.findFirst({
-        where: {
+        include: {
             Ticket: {
-                Enrollment: {
-                    userId
+                include: {
+                    Enrollment: {
+                        select: {
+                            userId: true
+                        }
+                    }
                 }
             }
         }
     })
+
     return dataPayment
 }
 
 async function postPayments(ticketId: number, dataCard: DataCard, userId: number) {
-    const ticket = await connectDb().ticket.findFirst({
-        where: {
-            id: ticketId
-        }
-    })
-
-    if (!ticket) return "NotTicket"
-
-    const userTicket = await connectDb().ticket.findFirst({
+    const ticketUser = await connectDb().ticket.findMany({
         where: {
             Enrollment: {
-                userId
+                userId: userId
             }
         }
     })
 
-    if (!userTicket) return "NotUser"
+    if (ticketUser.length === 0) return null
 
-    const value = await connectDb().ticket.findFirst({
+    const ticket = await connectDb().ticket.findMany({
         where: {
             id: ticketId
-        }, include: {
-            TicketType: {
-                select: {
-                    price: true
-                }
-            }
         }
     })
+
+    if (ticket.length === 0) return
 
     const payment = await connectDb().payment.create({
         data: {
+            Ticket: {
+                connect: {
+                    id: ticketId
+                }
+            }, value: 600,
             cardIssuer: dataCard.issuer,
-            cardLastDigits: dataCard.number.slice(-4),
-            value: value.TicketType.price,
-            ticketId
-        }
-    })
-
-    await connectDb().ticket.update({
-        data: {
-            status: "PAID"
-        }, where: {
-            id: ticketId
+            cardLastDigits: `${dataCard.number}`
         }
     })
 
     return payment
 }
 
-
+export type DataCard = {
+    issuer: string,
+    number: number,
+    name: string,
+    expirationDate: Date,
+    cvv: number
+}
 
 export const paymentsRepository = {
     getPayments,

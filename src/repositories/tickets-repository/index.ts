@@ -1,23 +1,29 @@
-import { Enrollment, Ticket, TicketType } from "@prisma/client";
+import { Enrollment, Ticket } from "@prisma/client";
 import { connectDb } from "../../config";
 
 
-async function getTicketsTypes(): Promise<TicketType[]> {
+async function getTicketsTypes() {
     const tickets = await connectDb().ticketType.findMany()
     return tickets
 }
 
 async function getTicket(userId: number) {
     const ticket = await connectDb().ticket.findFirst({
-        include: {
-            Enrollment: {
-                select: {
-                    id: true
-                }
-            }
-        }, where: {
+        where: {
             Enrollment: {
                 userId: userId
+            }
+        }, include: {
+            TicketType: {
+                select: {
+                    id: true,
+                    name: true,
+                    price: true,
+                    isRemote: true,
+                    includesHotel: true,
+                    createdAt: true,
+                    updatedAt: true
+                }
             }
         }
 
@@ -25,25 +31,43 @@ async function getTicket(userId: number) {
     return ticket
 }
 
-async function postTicketUser(idUser: number, idTicketType: number) {
+async function postTicketUser(userId: number, idTicketType: number) {
+    const cadastro = await connectDb().enrollment.findMany({
+        where: {
+            userId: userId
+        }
+    })
+
+    if (cadastro.length === 0) return
     const ticket = await connectDb().ticket.create({
-        include: {
-            TicketType: true
-        }, data: {
+        data: {
+            status: "PAID",
             TicketType: {
                 connect: {
                     id: idTicketType
                 }
-            }, Enrollment: {
-                connect: {
-                    userId: idUser
-                }
             },
-            status: "RESERVED"
+            Enrollment: {
+                connect: {
+                    userId: userId
+                }
+            }
+        },
+        include: {
+            TicketType: {
+                select: {
+                    id: true,
+                    name: true,
+                    price: true,
+                    isRemote: true,
+                    includesHotel: true,
+                    createdAt: true,
+                    updatedAt: true
+                }
+            }
         }
     })
     return ticket
-
 }
 
 export const ticketsRepository = {
