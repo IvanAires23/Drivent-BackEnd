@@ -53,6 +53,8 @@ npm run test
 
 ## Building and starting for production
 
+1. Configure the `.env` file using the `.env.example` file (see "Running application locally or inside docker" section for details)
+
 ```bash
 npm run build
 npm start
