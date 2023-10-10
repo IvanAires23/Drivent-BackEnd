@@ -1,8 +1,9 @@
-import { notFoundError, unauthorizedError } from '@/errors';
+import { invalidDataError, notFoundError, unauthorizedError } from '@/errors';
 import { CardPaymentParams, PaymentParams } from '@/protocols';
 import enrollmentRepository from '@/repositories/enrollment-repository';
 import paymentsRepository from '@/repositories/payments-repository';
 import ticketsRepository from '@/repositories/tickets-repository';
+import { badRequest } from '../../errors/bad-resquest-error';
 
 async function verifyTicketAndEnrollment(ticketId: number, userId: number) {
   const ticket = await ticketsRepository.findTickeyById(ticketId);
@@ -14,10 +15,15 @@ async function verifyTicketAndEnrollment(ticketId: number, userId: number) {
   if (enrollment.userId !== userId) throw unauthorizedError();
 }
 
-async function getPaymentByTicketId(userId: number, ticketId: number) {
-  await verifyTicketAndEnrollment(ticketId, userId);
+async function getPaymentByTicketId(userId: number, ticketId: any) {
 
-  const payment = await paymentsRepository.findPaymentByTicketId(ticketId);
+  if (!ticketId) throw badRequest();
+  const idTicket = Number(ticketId);
+  if (isNaN(idTicket)) throw badRequest()
+
+  await verifyTicketAndEnrollment(idTicket, userId);
+
+  const payment = await paymentsRepository.findPaymentByTicketId(idTicket);
   if (!payment) throw notFoundError();
 
   return payment;

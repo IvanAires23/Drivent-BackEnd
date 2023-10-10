@@ -5,20 +5,21 @@ import paymentsService from '@/services/payments-service';
 
 export async function getPaymentByTicketId(req: AuthenticatedRequest, res: Response) {
   try {
-    const ticketId = Number(req.query.ticketId);
+    const { ticketId } = req.query
     const { userId } = req;
 
-    if (!ticketId) return res.sendStatus(httpStatus.BAD_REQUEST);
-
     const payment = await paymentsService.getPaymentByTicketId(userId, ticketId);
-    if (!payment) return res.sendStatus(httpStatus.NOT_FOUND);
 
     return res.status(httpStatus.OK).send(payment);
   } catch (error) {
     if (error.name === 'UnauthorizedError') {
-      return res.sendStatus(httpStatus.UNAUTHORIZED);
+      return res.status(httpStatus.UNAUTHORIZED).send(error);
+    } else if (error.name === 'BAD_REQUEST') {
+      return res.status(httpStatus.BAD_REQUEST).send(error)
+    } else if (error.name === 'NotFoundError') {
+      return res.status(httpStatus.NOT_FOUND).send(error);
     }
-    return res.sendStatus(httpStatus.NOT_FOUND);
+    return res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR)
   }
 }
 
