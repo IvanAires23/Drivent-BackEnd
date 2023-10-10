@@ -1,64 +1,60 @@
 import { connectDb } from "../../config"
+import { DataCard } from "../../protocols"
 
 async function getPayments(ticketId: number, userId: number) {
+    const ticket = await connectDb().ticket.findFirst({
+        where: {
+            id: ticketId
+        }
+    })
+    if (!ticket) return "NotTicket"
+
     const dataPayment = await connectDb().payment.findFirst({
-        include: {
+        where: {
             Ticket: {
-                include: {
-                    Enrollment: {
-                        select: {
-                            userId: true
-                        }
-                    }
+                Enrollment: {
+                    userId
                 }
             }
         }
     })
-
     return dataPayment
 }
 
 async function postPayments(ticketId: number, dataCard: DataCard, userId: number) {
-    const ticketUser = await connectDb().ticket.findMany({
-        where: {
-            Enrollment: {
-                userId: userId
-            }
-        }
-    })
-
-    if (ticketUser.length === 0) return null
-
-    const ticket = await connectDb().ticket.findMany({
+    const ticket = await connectDb().ticket.findFirst({
         where: {
             id: ticketId
         }
     })
 
-    if (ticket.length === 0) return
+    if (!ticket) return "NotTicket"
+
+    const value = await connectDb().ticket.findFirst({
+        where: {
+            id: ticketId
+        }, include: {
+            TicketType: {
+                select: {
+                    price: true
+                }
+            }
+        }
+    })
 
     const payment = await connectDb().payment.create({
         data: {
-            Ticket: {
-                connect: {
-                    id: ticketId
-                }
-            }, value: 600,
             cardIssuer: dataCard.issuer,
-            cardLastDigits: `${dataCard.number}`
+            cardLastDigits: dataCard.number.slice(-4),
+            value: value.TicketType.price,
+            ticketId: ticketId
         }
     })
 
     return payment
 }
 
-export type DataCard = {
-    issuer: string,
-    number: number,
-    name: string,
-    expirationDate: Date,
-    cvv: number
-}
+
 
 export const paymentsRepository = {
     getPayments,
