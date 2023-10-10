@@ -44,11 +44,3 @@ export type RequestError = {
   name: string;
   message: string;
 };
-
-export type DataCard = {
-  issuer: string,
-  number: string,
-  name: string,
-  expirationDate: Date,
-  cvv: number
-}

@@ -1,52 +1,49 @@
+import { Enrollment, Ticket, TicketType } from "@prisma/client";
 import { connectDb } from "../../config";
 
 
-async function getTicketsTypes() {
+async function getTicketsTypes(): Promise<TicketType[]> {
     const tickets = await connectDb().ticketType.findMany()
     return tickets
 }
 
 async function getTicket(userId: number) {
     const ticket = await connectDb().ticket.findFirst({
-        where: {
+        include: {
             Enrollment: {
-                userId
+                select: {
+                    id: true
+                }
             }
-        }, include: {
-            TicketType: true
+        }, where: {
+            Enrollment: {
+                userId: userId
+            }
         }
 
     })
     return ticket
 }
 
-async function postTicketUser(userId: number, idTicketType: number) {
-    const cadastro = await connectDb().enrollment.findMany({
-        where: {
-            userId
-        }
-    })
-
-    if (cadastro.length === 0) return
+async function postTicketUser(idUser: number, idTicketType: number) {
     const ticket = await connectDb().ticket.create({
-        data: {
-            status: "RESERVED",
+        include: {
+            TicketType: true
+        }, data: {
             TicketType: {
                 connect: {
                     id: idTicketType
                 }
-            },
-            Enrollment: {
+            }, Enrollment: {
                 connect: {
-                    userId
+                    userId: idUser
                 }
-            }
-        },
-        include: {
-            TicketType: true
+            },
+            status: "RESERVED"
         }
     })
     return ticket
+
 }
 
 export const ticketsRepository = {
