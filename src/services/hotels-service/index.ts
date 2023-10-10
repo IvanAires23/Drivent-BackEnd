@@ -1,40 +1,20 @@
-import hotelRepository from '@/repositories/hotel-repository';
-import enrollmentRepository from '@/repositories/enrollment-repository';
-import { notFoundError } from '@/errors';
-import ticketsRepository from '@/repositories/tickets-repository';
-import { cannotListHotelsError } from '@/errors/cannot-list-hotels-error';
-
-async function listHotels(userId: number) {
-  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
-  if (!enrollment) {
-    throw notFoundError();
-  }
-  const ticket = await ticketsRepository.findTicketByEnrollmentId(enrollment.id);
-
-  if (!ticket || ticket.status === 'RESERVED' || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
-    throw cannotListHotelsError(); // LANÇA UM ERRO PARA A FUNÇÃO QUE O CHAMOU
-  }
-}
+import { notFoundError } from "../../errors"
+import { paymentRequired } from "../../errors/payment-required"
+import { hotelsRepository } from "../../repositories/hotels-repository"
 
 async function getHotels(userId: number) {
-  await listHotels(userId);
+    const user = await hotelsRepository.getUser(userId)
+    const ticket = await hotelsRepository.getTicket(userId)
+    if (!user || !ticket) throw notFoundError()
+    if (ticket.status === "RESERVED"
+        || ticket.TicketType.includesHotel === false
+        || ticket.TicketType.isRemote === true) throw paymentRequired()
 
-  const hotels = await hotelRepository.findHotels();
-  return hotels;
+    const hotels = await hotelsRepository.getHotels()
+    return hotels
+
 }
 
-async function getHotelsWithRooms(userId: number, hotelId: number) {
-  await listHotels(userId);
-
-  const hotel = await hotelRepository.findRoomsByHotelId(hotelId);
-
-  if (!hotel) {
-    throw notFoundError();
-  }
-  return hotel;
+export const hotelsService = {
+    getHotels
 }
-
-export default {
-  getHotels,
-  getHotelsWithRooms,
-};
