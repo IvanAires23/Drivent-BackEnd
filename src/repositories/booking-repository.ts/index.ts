@@ -19,7 +19,20 @@ function postBooking(userId: number, roomId: number) {
     })
 }
 
+function roomChange(id: number, roomId: number) {
+    return prisma.booking.update({
+        where: {
+            id
+        }, data: {
+            roomId
+        }, select: {
+            id: true
+        }
+    })
+}
+
 export const bookingRepository = {
     getBooking,
-    postBooking
+    postBooking,
+    roomChange
 }
