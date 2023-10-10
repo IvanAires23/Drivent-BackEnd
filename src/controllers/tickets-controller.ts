@@ -1,49 +1,41 @@
-import { Request, Response } from "express";
-import httpStatus from "http-status";
-import { ticketsService } from "../services/tickets-service";
+import { Response } from 'express';
+import httpStatus from 'http-status';
+import { AuthenticatedRequest } from '@/middlewares';
+import ticketService from '@/services/tickets-service';
+import { InputTicketBody } from '@/protocols';
 
-async function getTicketsTypes(req: Request, res: Response) {
-    try {
-        const tickets = await ticketsService.getTicketsTypes()
-        res.status(httpStatus.OK).send(tickets)
-    } catch (err) {
-        res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR)
-    }
+export async function getTicketTypes(req: AuthenticatedRequest, res: Response) {
+  try {
+    const ticketTypes = await ticketService.getTicketType();
+    return res.status(httpStatus.OK).send(ticketTypes);
+  } catch (e) {
+    return res.sendStatus(httpStatus.NO_CONTENT);
+  }
 }
 
-async function postTicketsUser(req: Request, res: Response) {
-    const { ticketTypeId } = req.body
-    const userId = res.locals.userId
-    try {
-        const tickets = await ticketsService.postTicketsUser(Number(userId), Number(ticketTypeId))
-        res.status(httpStatus.CREATED).send(tickets)
-    } catch (err) {
-        if (err.name === 'BAD REQUEST') {
-            return res.sendStatus(httpStatus.BAD_REQUEST)
-        } else if (err.name === 'NotFoundError') {
-            return res.sendStatus(httpStatus.NOT_FOUND)
-        }
-        res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR)
-    }
+export async function getTickets(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+
+  try {
+    const ticket = await ticketService.getTicketByUserId(userId);
+    return res.status(httpStatus.OK).send(ticket);
+  } catch (e) {
+    return res.sendStatus(httpStatus.NOT_FOUND);
+  }
 }
 
-async function getTicket(req: Request, res: Response) {
-    const userId = res.locals.userId
-    try {
-        const ticket = await ticketsService.getTicket(userId)
-        res.status(httpStatus.OK).send(ticket)
-    } catch (err) {
-        if (err.name === 'NotFoundError') {
-            return res.sendStatus(httpStatus.NOT_FOUND)
-        }
-        res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR)
-    }
-}
+export async function createTicket(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+  const { ticketTypeId } = req.body as InputTicketBody;
 
+  if (!ticketTypeId) {
+    return res.sendStatus(httpStatus.BAD_REQUEST);
+  }
 
-
-export const ticketsController = {
-    getTicketsTypes,
-    postTicketsUser,
-    getTicket,
+  try {
+    const ticket = await ticketService.createTicket(userId, ticketTypeId);
+    return res.status(httpStatus.CREATED).send(ticket);
+  } catch (e) {
+    return res.sendStatus(httpStatus.NOT_FOUND);
+  }
 }

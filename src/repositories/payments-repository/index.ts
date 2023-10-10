@@ -1,62 +1,21 @@
-import { connectDb } from "../../config"
-import { DataCard } from "../../protocols"
+import { prisma } from '@/config';
+import { PaymentParams } from '@/protocols';
 
-async function getPayments(ticketId: number, userId: number) {
-    const ticket = await connectDb().ticket.findFirst({
-        where: {
-            id: ticketId
-        }
-    })
-    if (!ticket) return "NotTicket"
-
-    const dataPayment = await connectDb().payment.findFirst({
-        where: {
-            Ticket: {
-                Enrollment: {
-                    userId
-                }
-            }
-        }
-    })
-    return dataPayment
+async function findPaymentByTicketId(ticketId: number) {
+  return prisma.payment.findFirst({
+    where: {
+      ticketId,
+    },
+  });
 }
 
-async function postPayments(ticketId: number, dataCard: DataCard, userId: number) {
-    const ticket = await connectDb().ticket.findFirst({
-        where: {
-            id: ticketId
-        }
-    })
-
-    if (!ticket) return "NotTicket"
-
-    const value = await connectDb().ticket.findFirst({
-        where: {
-            id: ticketId
-        }, include: {
-            TicketType: {
-                select: {
-                    price: true
-                }
-            }
-        }
-    })
-
-    const payment = await connectDb().payment.create({
-        data: {
-            cardIssuer: dataCard.issuer,
-            cardLastDigits: dataCard.number.slice(-4),
-            value: value.TicketType.price,
-            ticketId: ticketId
-        }
-    })
-
-    return payment
+async function createPayment(ticketId: number, params: PaymentParams) {
+  return prisma.payment.create({
+    data: {
+      ticketId,
+      ...params,
+    },
+  });
 }
 
-
-
-export const paymentsRepository = {
-    getPayments,
-    postPayments
-}
+export default { findPaymentByTicketId, createPayment };
