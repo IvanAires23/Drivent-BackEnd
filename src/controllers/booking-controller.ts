@@ -8,7 +8,7 @@ async function getBooking(req: AuthenticatedRequest, res: Response) {
     try {
         const booking = await bookingService.getBooking(Number(userId))
         res.status(httpStatus.OK).send({
-            bookingId: booking.id,
+            id: booking.id,
             Room: booking.Room
         })
     } catch (err) {
@@ -30,6 +30,9 @@ async function postBooking(req: AuthenticatedRequest, res: Response) {
         const result = await bookingService.postBooking(userId, roomId)
         res.status(httpStatus.OK).send({ bookingId: result.id })
     } catch (err) {
+        if (err.name === 'ForBiddenBooking') {
+            return res.status(httpStatus.FORBIDDEN).send(err.message)
+        }
         if (err.name === 'NotFoundError') {
             return res.status(httpStatus.NOT_FOUND).send(err.message)
         }
