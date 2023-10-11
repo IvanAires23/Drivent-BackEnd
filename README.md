@@ -1,6 +1,9 @@
 # Driven.t - Back-end
 
-Back-end for Driven.t, an event management solution.
+
+Drivent is the perfect solution for management any kind of event. From meetings to concerts This website has advanced functionality from ticket sales. Accommodation reservation to managing activities To simplify and improve the experience for participants.
+
+Try it out now at: https://driventapi-svvb.onrender.com
 
 ## About
 
