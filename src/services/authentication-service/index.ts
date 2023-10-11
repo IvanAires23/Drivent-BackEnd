@@ -52,9 +52,8 @@ type SignInResult = {
 
 type GetUserOrFailResult = Pick<User, 'id' | 'email' | 'password'>;
 
-const authenticationService = {
+export const authenticationService = {
   signIn,
 };
 
-export default authenticationService;
-export * from './errors';
+
